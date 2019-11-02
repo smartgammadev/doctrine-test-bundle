@@ -70,10 +70,6 @@ class StaticConnection implements Connection
      */
     public function beginTransaction(): bool
     {
-        if ($this->transactionStarted) {
-            return $this->connection->beginTransaction();
-        }
-
         return $this->transactionStarted = true;
     }
 
@@ -82,7 +78,7 @@ class StaticConnection implements Connection
      */
     public function commit(): bool
     {
-        return $this->connection->commit();
+        return true;
     }
 
     /**
@@ -90,7 +86,7 @@ class StaticConnection implements Connection
      */
     public function rollBack(): bool
     {
-        return $this->connection->rollBack();
+        return true;
     }
 
     /**

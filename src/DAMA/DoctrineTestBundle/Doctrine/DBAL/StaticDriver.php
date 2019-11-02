@@ -49,7 +49,6 @@ class StaticDriver implements Driver, ExceptionConverterDriver, VersionAwarePlat
 
             if (!isset(self::$connections[$key])) {
                 self::$connections[$key] = $this->underlyingDriver->connect($params, $username, $password, $driverOptions);
-                self::$connections[$key]->beginTransaction();
             }
 
             return new StaticConnection(self::$connections[$key]);
@@ -125,26 +124,16 @@ class StaticDriver implements Driver, ExceptionConverterDriver, VersionAwarePlat
 
     public static function beginTransaction(): void
     {
-        foreach (self::$connections as $con) {
-            try {
-                $con->beginTransaction();
-            } catch (\PDOException $e) {
-                //transaction could be started already
-            }
-        }
+
     }
 
     public static function rollBack(): void
     {
-        foreach (self::$connections as $con) {
-            $con->rollBack();
-        }
+
     }
 
     public static function commit(): void
     {
-        foreach (self::$connections as $con) {
-            $con->commit();
-        }
+
     }
 }
