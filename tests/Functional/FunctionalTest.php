@@ -3,8 +3,8 @@
 namespace Tests\Functional;
 
 use Doctrine\DBAL\Connection;
-use Symfony\Component\HttpKernel\KernelInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 class FunctionalTest extends TestCase
 {
@@ -88,6 +88,14 @@ class FunctionalTest extends TestCase
 
     public function testPreviousChangesAreRolledBackAfterUsingSavePoint(): void
     {
+        $this->assertRowCount(0);
+    }
+
+    public function testRollBackChangesWithReOpenedConnection(): void
+    {
+        $this->connection->close();
+        $this->connection->beginTransaction();
+        $this->connection->commit();
         $this->assertRowCount(0);
     }
 }

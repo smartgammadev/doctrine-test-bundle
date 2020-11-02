@@ -3,10 +3,10 @@
 namespace DAMA\DoctrineTestBundle\Doctrine\DBAL;
 
 use Doctrine\DBAL\Driver;
-use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Driver\Connection;
 use Doctrine\DBAL\Driver\DriverException;
 use Doctrine\DBAL\Driver\ExceptionConverterDriver;
+use Doctrine\DBAL\Exception;
 use Doctrine\DBAL\Platforms\AbstractPlatform;
 use Doctrine\DBAL\Schema\AbstractSchemaManager;
 use Doctrine\DBAL\VersionAwarePlatformDriver;
@@ -21,7 +21,7 @@ class StaticDriver implements Driver, ExceptionConverterDriver, VersionAwarePlat
     /**
      * @var bool
      */
-    private static $keepStaticConnections = false;
+    private static $keepStaticConnections;
 
     /**
      * @var Driver
@@ -49,6 +49,7 @@ class StaticDriver implements Driver, ExceptionConverterDriver, VersionAwarePlat
 
             if (!isset(self::$connections[$key])) {
                 self::$connections[$key] = $this->underlyingDriver->connect($params, $username, $password, $driverOptions);
+                self::$connections[$key]->beginTransaction();
             }
 
             return new StaticConnection(self::$connections[$key]);
@@ -84,7 +85,7 @@ class StaticDriver implements Driver, ExceptionConverterDriver, VersionAwarePlat
     /**
      * {@inheritdoc}
      */
-    public function getDatabase(\Doctrine\DBAL\Connection $conn): string
+    public function getDatabase(\Doctrine\DBAL\Connection $conn): ?string
     {
         return $this->underlyingDriver->getDatabase($conn);
     }
@@ -109,31 +110,39 @@ class StaticDriver implements Driver, ExceptionConverterDriver, VersionAwarePlat
         return $this->platform;
     }
 
-    /**
-     * @param bool $keepStaticConnections
-     */
-    public static function setKeepStaticConnections($keepStaticConnections): void
+    public static function setKeepStaticConnections(bool $keepStaticConnections): void
     {
         self::$keepStaticConnections = $keepStaticConnections;
     }
 
     public static function isKeepStaticConnections(): bool
     {
-        return self::$keepStaticConnections;
+        return self::$keepStaticConnections ?? false;
+    }
+
+    public static function isKeepStaticConnectionsInitialized(): bool
+    {
+        return null !== self::$keepStaticConnections;
     }
 
     public static function beginTransaction(): void
     {
-
+        foreach (self::$connections as $con) {
+            $con->beginTransaction();
+        }
     }
 
     public static function rollBack(): void
     {
-
+        foreach (self::$connections as $con) {
+            $con->rollBack();
+        }
     }
 
     public static function commit(): void
     {
-
+        foreach (self::$connections as $con) {
+            $con->commit();
+        }
     }
 }
